@@ -24,6 +24,7 @@ package-dir = { "MiniDistributed" = "." }
 packages = [
   "MiniDistributed",
   "MiniDistributed.core",
+  "MiniDistributed.dashboard",
   "MiniDistributed.trainer",
   "MiniDistributed.models",
   "MiniDistributed.examples",
@@ -32,4 +33,3 @@ packages = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-

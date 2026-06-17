@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import multiprocessing as mp
+import copy
 from queue import Empty
 from typing import Any, Iterable
 
@@ -21,6 +22,46 @@ def receive(queue: Any, timeout: float | None = None) -> Any:
 def broadcast(queues: Iterable[Any], message: Any) -> None:
     for queue in queues:
         queue.put(message)
+
+
+def compress_payload(payload: Any, mode: str = "none") -> Any:
+    if mode == "none":
+        return payload
+    if mode != "fp16":
+        raise ValueError(f"Unsupported compression mode: {mode}")
+    if isinstance(payload, dict):
+        return {key: compress_payload(value, mode) for key, value in payload.items()}
+    if isinstance(payload, list):
+        return [compress_payload(value, mode) for value in payload]
+    if isinstance(payload, tuple):
+        return tuple(compress_payload(value, mode) for value in payload)
+    if isinstance(payload, np.ndarray):
+        if np.issubdtype(payload.dtype, np.floating):
+            return payload.astype(np.float16)
+        return payload
+    if isinstance(payload, (float, np.floating)):
+        return np.float16(payload)
+    return payload
+
+
+def decompress_payload(payload: Any, mode: str = "none") -> Any:
+    if mode == "none":
+        return payload
+    if mode != "fp16":
+        raise ValueError(f"Unsupported compression mode: {mode}")
+    if isinstance(payload, dict):
+        return {key: decompress_payload(value, mode) for key, value in payload.items()}
+    if isinstance(payload, list):
+        return [decompress_payload(value, mode) for value in payload]
+    if isinstance(payload, tuple):
+        return tuple(decompress_payload(value, mode) for value in payload)
+    if isinstance(payload, np.ndarray):
+        if np.issubdtype(payload.dtype, np.floating):
+            return payload.astype(np.float32)
+        return payload
+    if isinstance(payload, (float, np.floating)):
+        return np.float32(payload)
+    return payload
 
 
 def _reduce_values(values: list[Any], op: str) -> Any:
@@ -44,10 +85,39 @@ def _reduce_values(values: list[Any], op: str) -> Any:
     raise TypeError(f"Unsupported value type for all_reduce: {type(first)!r}")
 
 
+def _scale_value(value: Any, scale: float) -> Any:
+    if isinstance(value, dict):
+        return {key: _scale_value(item, scale) for key, item in value.items()}
+    if isinstance(value, np.ndarray):
+        return value * scale
+    if isinstance(value, tuple):
+        return tuple(_scale_value(item, scale) for item in value)
+    if isinstance(value, list):
+        return [_scale_value(item, scale) for item in value]
+    if isinstance(value, (int, float, np.number)):
+        return type(value)(value * scale)
+    return copy.deepcopy(value)
+
+
 def all_reduce(values: list[Any], op: str = "mean") -> Any:
     if not values:
         raise ValueError("all_reduce needs at least one value")
     return _reduce_values(values, op)
+
+
+def ring_all_reduce(values: list[Any], op: str = "mean") -> Any:
+    if not values:
+        raise ValueError("ring_all_reduce needs at least one value")
+    if len(values) == 1:
+        return copy.deepcopy(values[0])
+    running = copy.deepcopy(values[0])
+    for value in values[1:]:
+        running = _reduce_values([running, value], op="sum")
+    if op == "sum":
+        return running
+    if op == "mean":
+        return _scale_value(running, 1.0 / len(values))
+    raise ValueError(f"Unsupported reduction op: {op}")
 
 
 class CommunicationHub:
@@ -58,4 +128,3 @@ class CommunicationHub:
 
     def worker_queue(self, rank: int) -> Any:
         return self.to_workers[rank]
-

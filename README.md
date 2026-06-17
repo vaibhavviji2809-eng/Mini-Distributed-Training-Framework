@@ -93,10 +93,24 @@ the comparison:
 python benchmarks/benchmark.py --workers 2 4 8
 ```
 
-## Roadmap
+## Advanced Features
 
-- Ring all-reduce
-- Gradient compression
-- Checkpoint resume
-- Dashboard metrics
-- Fault tolerance
+- Ring all-reduce: `sync_method="ring"` uses a ring-style reduction path.
+- Gradient compression: set `compression="fp16"` to shrink gradient payloads in transit.
+- Checkpoint resume: set `checkpoint_path=...` and `resume_from_checkpoint=True`.
+- Dashboard metrics: trainer results include `metrics` with loss, throughput, latency, and worker health.
+- Fault tolerance: enable `fault_tolerant=True` to restart from the latest checkpoint after a worker failure.
+
+Example:
+
+```python
+trainer = DistributedTrainer(
+    model=TinyGPT(),
+    workers=4,
+    checkpoint_path="checkpoints",
+    resume_from_checkpoint=True,
+    sync_method="ring",
+    compression="fp16",
+    fault_tolerant=True,
+)
+```

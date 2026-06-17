@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from .communication import receive, send
+from .communication import compress_payload, receive, send
 
 
 @dataclass
@@ -27,6 +27,8 @@ class Worker:
     inbox: Any
     metrics_queue: Any | None = None
     seed: int = 0
+    start_step: int = 0
+    compression: str = "none"
 
     def __post_init__(self) -> None:
         self.model = copy.deepcopy(self.model)
@@ -45,12 +47,16 @@ class Worker:
             raise RuntimeError("Worker expected initial weights from the parameter server")
         self.model.load_state_dict(init_message["state"])
 
-        rng = np.random.default_rng(self.seed + self.rank)
-        for step in range(self.steps):
+        rng = np.random.default_rng(self.seed + self.rank + self.start_step)
+        if self.metrics_queue is not None:
+            self.metrics_queue.put({"rank": self.rank, "status": "started"})
+
+        for step in range(self.start_step, self.start_step + self.steps):
             batch_indices = self._next_batch_indices(rng)
             batch_inputs = self.data[batch_indices]
             batch_targets = self.targets[batch_indices]
             loss, gradients = self.model.loss_and_gradients(batch_inputs, batch_targets)
+            compressed_gradients = compress_payload(gradients, mode=self.compression)
 
             send(
                 self.to_server,
@@ -59,7 +65,7 @@ class Worker:
                     "rank": self.rank,
                     "step": step,
                     "loss": float(loss),
-                    "gradients": gradients,
+                    "gradients": compressed_gradients,
                     "samples": int(len(batch_inputs)),
                 },
             )
@@ -78,8 +84,12 @@ class Worker:
                         "rank": self.rank,
                         "step": step + 1,
                         "loss": float(loss),
+                        "status": "running",
                     }
                 )
+
+        if self.metrics_queue is not None:
+            self.metrics_queue.put({"rank": self.rank, "status": "done"})
 
         send(self.to_server, {"type": "done", "rank": self.rank})
 
@@ -115,6 +125,8 @@ def run_worker_from_config(
     inbox: Any,
     metrics_queue: Any | None = None,
     seed: int = 0,
+    start_step: int = 0,
+    compression: str = "none",
 ) -> None:
     model = model_class(**model_config)
     model.load_state_dict(model_state)
@@ -130,5 +142,7 @@ def run_worker_from_config(
         inbox=inbox,
         metrics_queue=metrics_queue,
         seed=seed,
+        start_step=start_step,
+        compression=compression,
     )
     run_worker(worker)
