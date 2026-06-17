@@ -2,6 +2,16 @@
 
 A small, readable distributed-training playground built around multiprocessing.
 
+[![Release](https://img.shields.io/github/v/release/vaibhavviji2809-eng/Mini-Distributed-Training-Framework)](https://github.com/vaibhavviji2809-eng/Mini-Distributed-Training-Framework/releases)
+[![Tests](https://img.shields.io/github/actions/workflow/status/vaibhavviji2809-eng/Mini-Distributed-Training-Framework/tests.yml)](https://github.com/vaibhavviji2809-eng/Mini-Distributed-Training-Framework/actions/workflows/tests.yml)
+[![License](https://img.shields.io/github/license/vaibhavviji2809-eng/Mini-Distributed-Training-Framework)](LICENSE)
+
+## Badges
+
+- Release: latest tagged GitHub release
+- Tests: GitHub Actions test workflow
+- License: MIT
+
 ![Distributed architecture](docs/assets/distributed-architecture.svg)
 
 ## Install
@@ -82,6 +92,15 @@ trainer.train(inputs, targets)
 python -m MiniDistributed.examples.linear_regression
 python -m MiniDistributed.examples.mnist
 python -m MiniDistributed.examples.tiny_gpt
+python benchmarks/benchmark.py
+```
+
+The benchmark script compares a single-worker training pass with an in-process
+distributed data-parallel step. Pass custom worker counts if you want to scale
+the comparison:
+
+```bash
+python benchmarks/benchmark.py --workers 2 4 8
 ```
 
 ## Roadmap
