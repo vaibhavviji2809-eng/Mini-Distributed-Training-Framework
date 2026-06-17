@@ -1,0 +1,14 @@
+{
+  "sync_method": "ring",
+  "compression": "fp16",
+  "losses": [3.46, 3.41, 3.37, 3.31, 3.26, 3.19],
+  "throughput": [10234, 11890, 12600, 13120, 13655, 14110],
+  "communication_time": [0.34, 0.31, 0.29, 0.28, 0.27, 0.26],
+  "worker_health": {
+    "0": "done",
+    "1": "done",
+    "2": "done",
+    "3": "done"
+  },
+  "restarts": 0
+}

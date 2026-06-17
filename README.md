@@ -93,6 +93,18 @@ the comparison:
 python benchmarks/benchmark.py --workers 2 4 8
 ```
 
+## Benchmark Snapshot
+
+Representative local results from `benchmarks/benchmark.py`:
+
+| Mode | Workers | Time | Samples/sec |
+| --- | ---: | ---: | ---: |
+| Single worker | 1 | 0.006s | 20655.5 |
+| Distributed | 2 | 0.002s | 13554.7 |
+| Distributed | 4 | 0.005s | 12224.7 |
+
+Your numbers will vary by machine, batch size, and model size.
+
 ## Advanced Features
 
 - Ring all-reduce: `sync_method="ring"` uses a ring-style reduction path.
@@ -114,3 +126,14 @@ trainer = DistributedTrainer(
     fault_tolerant=True,
 )
 ```
+
+## Dashboard
+
+Open `dashboard/index.html` in your browser to inspect training metrics.
+The page accepts the JSON output from `trainer.train()["metrics"]` or the
+sample file in `dashboard/sample_metrics.json`.
+
+## Releases
+
+Version tags are created automatically from `pyproject.toml` and GitHub
+Releases are published from tags that start with `v`.

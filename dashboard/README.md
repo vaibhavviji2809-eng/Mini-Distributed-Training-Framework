@@ -1,8 +1,13 @@
 # Dashboard
 
-This folder is reserved for a future live dashboard.
+Open `dashboard/index.html` directly in a browser to inspect the training UI.
 
-Potential views:
+You can load either:
+
+- The sample metrics file at `dashboard/sample_metrics.json`
+- The JSON output from `trainer.train()["metrics"]`
+
+The dashboard shows:
 
 - Worker state
 - Loss curves
@@ -10,7 +15,7 @@ Potential views:
 - Gradient synchronization latency
 - Communication overhead
 
-The trainer now emits structured metrics through `dashboard/metrics.py`, including:
+The trainer emits structured metrics through `dashboard/metrics.py`, including:
 
 - Step loss
 - Throughput
@@ -18,4 +23,5 @@ The trainer now emits structured metrics through `dashboard/metrics.py`, includi
 - Worker health
 - Restart counts
 
-Suggested next step: expose these metrics through a small web app or a desktop UI.
+Suggested next step: connect the dashboard to a live training run or host it
+through a tiny local web server.

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MiniDistributed Dashboard</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">MiniDistributed</p>
+          <h1>Training Dashboard</h1>
+          <p class="lede">
+            Track loss, throughput, communication time, worker health, and restart activity from distributed runs.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <label class="file-button">
+            Load metrics JSON
+            <input id="file-input" type="file" accept="application/json,.json" />
+          </label>
+          <button id="load-sample" class="ghost-button" type="button">Load sample</button>
+        </div>
+      </header>
+
+      <section class="status-grid" id="summary-cards"></section>
+
+      <section class="content-grid">
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Loss curve</p>
+              <h2>Training trend</h2>
+            </div>
+            <span id="sync-chip" class="chip">parameter_server</span>
+          </div>
+          <canvas id="loss-chart" width="900" height="320"></canvas>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Throughput</p>
+              <h2>Samples per second</h2>
+            </div>
+            <span id="compression-chip" class="chip">none</span>
+          </div>
+          <canvas id="throughput-chart" width="900" height="320"></canvas>
+        </article>
+      </section>
+
+      <section class="content-grid lower">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Workers</p>
+              <h2>Health</h2>
+            </div>
+            <span id="restart-chip" class="chip">0 restarts</span>
+          </div>
+          <div id="worker-grid" class="worker-grid"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Raw Data</p>
+              <h2>Metrics JSON</h2>
+            </div>
+            <button id="copy-json" class="ghost-button" type="button">Copy</button>
+          </div>
+          <textarea id="json-view" spellcheck="false"></textarea>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

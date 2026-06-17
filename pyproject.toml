@@ -30,6 +30,9 @@ packages = [
   "MiniDistributed.examples",
 ]
 
+[tool.setuptools.package-data]
+"MiniDistributed.dashboard" = ["*.html", "*.css", "*.js", "*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
