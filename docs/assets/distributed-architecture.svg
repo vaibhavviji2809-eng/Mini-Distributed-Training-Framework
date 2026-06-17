@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#111a33"/>
+    </linearGradient>
+    <linearGradient id="server" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6ee7ff"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="worker" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <style>
+      .title { fill: #f8fafc; font: 700 38px Arial, sans-serif; }
+      .subtitle { fill: #cbd5e1; font: 400 18px Arial, sans-serif; }
+      .label { fill: #f8fafc; font: 700 22px Arial, sans-serif; }
+      .text { fill: #cbd5e1; font: 400 16px Arial, sans-serif; }
+      .small { fill: #94a3b8; font: 400 14px Arial, sans-serif; }
+    </style>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="url(#bg)"/>
+  <text x="60" y="76" class="title">MiniDistributed</text>
+  <text x="60" y="110" class="subtitle">A tiny distributed training framework built around multiprocessing and synchronous gradient averaging.</text>
+
+  <rect x="425" y="160" width="350" height="150" rx="22" fill="url(#server)" opacity="0.95"/>
+  <text x="600" y="214" text-anchor="middle" class="label">Parameter Server</text>
+  <text x="600" y="247" text-anchor="middle" class="text">Receives gradients</text>
+  <text x="600" y="272" text-anchor="middle" class="text">Averages updates</text>
+  <text x="600" y="297" text-anchor="middle" class="text">Broadcasts weights</text>
+
+  <rect x="70" y="380" width="190" height="100" rx="18" fill="url(#worker)"/>
+  <rect x="290" y="380" width="190" height="100" rx="18" fill="url(#worker)"/>
+  <rect x="730" y="380" width="190" height="100" rx="18" fill="url(#worker)"/>
+  <rect x="950" y="380" width="190" height="100" rx="18" fill="url(#worker)"/>
+
+  <text x="165" y="422" text-anchor="middle" class="label">Worker 1</text>
+  <text x="165" y="448" text-anchor="middle" class="small">Local batch + gradients</text>
+  <text x="385" y="422" text-anchor="middle" class="label">Worker 2</text>
+  <text x="385" y="448" text-anchor="middle" class="small">Local batch + gradients</text>
+  <text x="825" y="422" text-anchor="middle" class="label">Worker 3</text>
+  <text x="825" y="448" text-anchor="middle" class="small">Local batch + gradients</text>
+  <text x="1045" y="422" text-anchor="middle" class="label">Worker 4</text>
+  <text x="1045" y="448" text-anchor="middle" class="small">Local batch + gradients</text>
+
+  <path d="M165 380 C165 340, 385 340, 505 310" stroke="#94a3b8" stroke-width="5" fill="none"/>
+  <path d="M385 380 C385 345, 470 335, 530 310" stroke="#94a3b8" stroke-width="5" fill="none"/>
+  <path d="M825 380 C825 345, 730 335, 670 310" stroke="#94a3b8" stroke-width="5" fill="none"/>
+  <path d="M1045 380 C1045 340, 830 340, 695 310" stroke="#94a3b8" stroke-width="5" fill="none"/>
+
+  <path d="M505 310 L500 295 L520 300 Z" fill="#94a3b8"/>
+  <path d="M530 310 L525 295 L545 300 Z" fill="#94a3b8"/>
+  <path d="M670 310 L665 295 L685 300 Z" fill="#94a3b8"/>
+  <path d="M695 310 L690 295 L710 300 Z" fill="#94a3b8"/>
+
+  <text x="600" y="520" text-anchor="middle" class="small">Queue-based communication today, ring all-reduce tomorrow.</text>
+</svg>
+
