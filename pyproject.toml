@@ -18,6 +18,9 @@ dev = ["pytest>=8"]
 [project.urls]
 Homepage = "https://github.com/vaibhavviji2809-eng/Mini-Distributed-Training-Framework"
 
+[project.scripts]
+mini-distributed-dashboard = "MiniDistributed.dashboard.server:main"
+
 [tool.setuptools]
 include-package-data = true
 package-dir = { "MiniDistributed" = "." }

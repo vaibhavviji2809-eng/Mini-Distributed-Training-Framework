@@ -26,6 +26,7 @@ class ParameterServer:
     receive_timeout: float = 2.0
     worker_processes: list[Any] | None = None
     checkpoint_callback: Callable[[dict[str, Any]], None] | None = None
+    metrics_callback: Callable[[dict[str, Any]], None] | None = None
     history: list[dict[str, Any]] = field(default_factory=list)
 
     def _dead_worker(self) -> Any | None:
@@ -95,6 +96,8 @@ class ParameterServer:
             self.history.append(step_metrics)
             if self.metrics_queue is not None:
                 self.metrics_queue.put(step_metrics)
+            if self.metrics_callback is not None:
+                self.metrics_callback(step_metrics)
             if self.checkpoint_callback is not None:
                 self.checkpoint_callback(
                     {

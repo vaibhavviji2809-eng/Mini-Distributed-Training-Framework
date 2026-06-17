@@ -74,7 +74,7 @@ trainer.train(inputs, targets)
 - `models/` TinyGPT toy model
 - `examples/` runnable demos
 - `docs/` design notes and roadmap
-- `dashboard/` future observability UI notes
+- `dashboard/` live metrics dashboard and local server
 
 ## Example Commands
 
@@ -129,9 +129,27 @@ trainer = DistributedTrainer(
 
 ## Dashboard
 
-Open `dashboard/index.html` in your browser to inspect training metrics.
-The page accepts the JSON output from `trainer.train()["metrics"]` or the
-sample file in `dashboard/sample_metrics.json`.
+Open `dashboard/index.html` directly for the static view, or run the tiny
+local server for live polling:
+
+```bash
+mini-distributed-dashboard --metrics-file runs/live_metrics.json
+```
+
+Then point a trainer at the same metrics file:
+
+```python
+trainer = DistributedTrainer(
+    model=TinyGPT(),
+    workers=4,
+    dashboard_metrics_path="runs/live_metrics.json",
+)
+trainer.train()
+```
+
+The page accepts the JSON output from `trainer.train()["metrics"]`, the sample
+file in `dashboard/sample_metrics.json`, or the live endpoint served by
+`/api/metrics`.
 
 ## Releases
 

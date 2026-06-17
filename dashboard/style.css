@@ -206,6 +206,25 @@ h1 {
   font-size: 0.85rem;
 }
 
+.chip-live.connected {
+  border-color: rgba(86, 227, 159, 0.45);
+  background: rgba(86, 227, 159, 0.12);
+  color: #b9f7d3;
+}
+
+.chip-live.connecting {
+  border-color: rgba(245, 196, 81, 0.45);
+  background: rgba(245, 196, 81, 0.12);
+  color: #fde8a7;
+}
+
+.chip-live.paused,
+.chip-live.error {
+  border-color: rgba(255, 120, 135, 0.45);
+  background: rgba(255, 120, 135, 0.12);
+  color: #ffc6cf;
+}
+
 canvas {
   width: 100%;
   height: auto;

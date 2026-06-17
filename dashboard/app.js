@@ -16,8 +16,11 @@ const jsonView = document.getElementById("json-view");
 const syncChip = document.getElementById("sync-chip");
 const compressionChip = document.getElementById("compression-chip");
 const restartChip = document.getElementById("restart-chip");
+const liveChip = document.getElementById("live-chip");
 const lossChart = document.getElementById("loss-chart");
 const throughputChart = document.getElementById("throughput-chart");
+let livePollHandle = null;
+let liveMode = window.location.protocol !== "file:";
 
 function normalizeMetrics(payload) {
   if (payload && typeof payload === "object" && payload.metrics) {
@@ -190,6 +193,12 @@ function renderMetadata(metrics) {
   jsonView.value = JSON.stringify(metrics, null, 2);
 }
 
+function setLiveStatus(status, stateClass) {
+  if (!liveChip) return;
+  liveChip.textContent = status;
+  liveChip.className = `chip chip-live ${stateClass}`;
+}
+
 function render(payload) {
   const metrics = normalizeMetrics(payload);
   state.metrics = metrics;
@@ -204,10 +213,34 @@ async function readFile(file) {
   return JSON.parse(text);
 }
 
+async function fetchLiveMetrics() {
+  if (!liveMode) return;
+  try {
+    const response = await fetch("/api/metrics", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    render(await response.json());
+    setLiveStatus("live: connected", "connected");
+  } catch (error) {
+    setLiveStatus("live: disconnected", "error");
+  }
+}
+
+function startLivePolling() {
+  if (!liveMode || livePollHandle) return;
+  fetchLiveMetrics();
+  livePollHandle = window.setInterval(fetchLiveMetrics, 1000);
+}
+
 document.getElementById("file-input").addEventListener("change", async (event) => {
   const [file] = event.target.files || [];
   if (!file) return;
   try {
+    liveMode = false;
+    if (livePollHandle) {
+      window.clearInterval(livePollHandle);
+      livePollHandle = null;
+    }
+    setLiveStatus("live: paused", "paused");
     render(await readFile(file));
   } catch (error) {
     alert(`Could not load JSON: ${error.message}`);
@@ -215,6 +248,12 @@ document.getElementById("file-input").addEventListener("change", async (event) =
 });
 
 document.getElementById("load-sample").addEventListener("click", () => {
+  liveMode = false;
+  if (livePollHandle) {
+    window.clearInterval(livePollHandle);
+    livePollHandle = null;
+  }
+  setLiveStatus("live: paused", "paused");
   render(sampleMetrics);
 });
 
@@ -229,3 +268,9 @@ document.getElementById("copy-json").addEventListener("click", async () => {
 window.addEventListener("resize", () => render(state.metrics));
 
 render(sampleMetrics);
+if (liveMode) {
+  setLiveStatus("live: connecting", "connecting");
+  startLivePolling();
+} else {
+  setLiveStatus("live: file mode", "paused");
+}

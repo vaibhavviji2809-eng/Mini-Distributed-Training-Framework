@@ -4,6 +4,7 @@ import copy
 import multiprocessing as mp
 from queue import Empty
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -34,11 +35,13 @@ class DistributedTrainer:
     fault_tolerant: bool = True
     max_restarts: int = 2
     receive_timeout: float = 2.0
+    dashboard_metrics_path: str | None = None
 
     def __post_init__(self) -> None:
         self.model = copy.deepcopy(self.model)
         self.history: list[dict[str, Any]] = []
         self.metrics = TrainingMetrics(sync_method=self.sync_method, compression=self.compression)
+        self.dashboard_metrics_path = Path(self.dashboard_metrics_path) if self.dashboard_metrics_path is not None else None
 
     def _checkpoint_manager(self) -> CheckpointManager | None:
         if self.checkpoint_path is None:
@@ -68,7 +71,16 @@ class DistributedTrainer:
                 shards.append((inputs[shard_indices], targets[shard_indices]))
         return shards
 
-    def _drain_metrics_queue(self, metrics_queue: Any) -> None:
+    def _write_dashboard_snapshot(self) -> None:
+        if self.dashboard_metrics_path is None:
+            return
+        self.metrics.write_snapshot(self.dashboard_metrics_path)
+
+    def _record_dashboard_step(self, step_metrics: dict[str, Any]) -> None:
+        self.metrics.record_step(step_metrics)
+        self._write_dashboard_snapshot()
+
+    def _drain_metrics_queue(self, metrics_queue: Any, *, record_steps: bool = True) -> None:
         while True:
             try:
                 message = metrics_queue.get_nowait()
@@ -79,7 +91,7 @@ class DistributedTrainer:
             if message.get("status") in {"started", "done"}:
                 self.metrics.record_worker_health(int(message["rank"]), str(message["status"]))
                 continue
-            if "step" in message:
+            if "step" in message and record_steps:
                 self.metrics.record_step(message)
 
     def _cleanup_processes(self, processes: list[mp.Process]) -> None:
@@ -159,6 +171,7 @@ class DistributedTrainer:
             start_step = int(checkpoint.get("step", checkpoint.get("epoch", 0)))
             for entry in self.history:
                 self.metrics.record_step(entry)
+            self._write_dashboard_snapshot()
 
         if start_step >= self.steps_per_worker:
             return {
@@ -194,6 +207,9 @@ class DistributedTrainer:
             metrics_queue = ctx.Queue()
             model_state = self.model.state_dict()
             model_config = self.model.config_dict() if hasattr(self.model, "config_dict") else {}
+            for rank in range(self.workers):
+                self.metrics.record_worker_health(rank, "started")
+            self._write_dashboard_snapshot()
             processes = self._spawn_workers(
                 ctx=ctx,
                 hub=hub,
@@ -222,6 +238,7 @@ class DistributedTrainer:
                 receive_timeout=self.receive_timeout,
                 worker_processes=processes,
                 checkpoint_callback=checkpoint_callback if checkpoint_manager is not None else None,
+                metrics_callback=self._record_dashboard_step if self.dashboard_metrics_path is not None else None,
             )
 
             try:
@@ -242,10 +259,11 @@ class DistributedTrainer:
                 continue
 
             self._cleanup_processes(processes)
-            self._drain_metrics_queue(metrics_queue)
+            self._drain_metrics_queue(metrics_queue, record_steps=self.dashboard_metrics_path is None)
             self.model.load_state_dict(result["model_state"])
             self.history = base_history + list(result["history"])
             start_step = int(result["completed_steps"])
+            self._write_dashboard_snapshot()
             break
 
         return {
